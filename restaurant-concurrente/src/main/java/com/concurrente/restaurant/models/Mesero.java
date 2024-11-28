@@ -51,7 +51,9 @@ public class Mesero implements Runnable {
                 System.out.println("Comensal sale del restaurante. Comensales en el restaurante: " +
                         restaurante.comensalesEnRestaurante + ". Mesas ocupadas en el restaurante: " +
                         restaurante.mesasOcupadas);
-                //controller.updateComensalStatus("clear");
+                
+                System.out.print("notificar que el comensal esta saliendo");
+                eventBus.notifyObservers("COMENSAL_SALE", null);
 
                 restaurante.notify();
             }

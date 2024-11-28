@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class Restaurante {
-    public static final int CAPACIDAD_MAXIMA = 20;
+    public static final int CAPACIDAD_MAXIMA = 10;
     public int mesasOcupadas = 0;
     public int comensalesEnRestaurante = 0;
     public boolean bufferDeComidaListo = false;
@@ -19,7 +19,7 @@ public class Restaurante {
     public Queue<Comida> bufferComidas = new LinkedList<>();
 
     public Restaurante() {
-        this.numCocineros = (int) (CAPACIDAD_MAXIMA * 0.1);
+        this.numCocineros = (int) (CAPACIDAD_MAXIMA * 0.15);
     }
 
     public synchronized void verificarOrdenLista() throws InterruptedException {

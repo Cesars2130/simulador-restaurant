@@ -32,7 +32,7 @@ public class RestaurantApp extends GameApplication {
         Thread recepcionistaThread = new Thread(new Recepcionista(restaurante, eventBus));
         Thread meseroThread = new Thread(new Mesero(restaurante, eventBus));
 
-        int numMeseros = (int) (Restaurante.CAPACIDAD_MAXIMA * 0.3);
+        int numMeseros = (int) (Restaurante.CAPACIDAD_MAXIMA * 0.1);
         Thread[] meserosThreads = new Thread[numMeseros];
         for (int i = 0; i < meserosThreads.length; i++) {
             meserosThreads[i] = new Thread(new Mesero(restaurante, eventBus));

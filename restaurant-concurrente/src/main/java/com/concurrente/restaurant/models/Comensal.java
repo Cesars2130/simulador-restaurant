@@ -30,8 +30,7 @@ public class Comensal implements Runnable {
                 // Tiempo aleatorio de comida antes de abandonar el restaurante
                 int tiempoComida = new Random().nextInt(5000) + 3000;
                 Thread.sleep(tiempoComida);
-
-                eventBus.notifyObservers("COMENSAL_SALE", id);
+                
                 // Dejar el restaurante
                 break;
             } catch (InterruptedException e) {
