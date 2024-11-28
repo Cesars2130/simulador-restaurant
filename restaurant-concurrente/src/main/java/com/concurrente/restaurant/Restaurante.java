@@ -1,7 +1,7 @@
 package com.concurrente.restaurant;
 
 import java.util.concurrent.locks.Condition;
-import com.example.simulator.models.Comensal;
+import com.concurrente.restaurant.models.Comensal;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.LinkedList;

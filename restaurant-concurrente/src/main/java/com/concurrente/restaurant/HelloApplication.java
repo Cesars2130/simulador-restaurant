@@ -7,10 +7,10 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-import com.example.simulator.models.Chef;
-import com.example.simulator.models.Mesero;
-import com.example.simulator.models.Comensal;
-import com.example.simulator.models.Recepcionista;
+import com.concurrente.restaurant.models.Chef;
+import com.concurrente.restaurant.models.Mesero;
+import com.concurrente.restaurant.models.Comensal;
+import com.concurrente.restaurant.models.Recepcionista;
 
 public class HelloApplication extends Application {
     private HelloController controller;
@@ -45,7 +45,7 @@ public class HelloApplication extends Application {
             meseroIndividualThread.start();
         }
 
-        stage.setTitle("DORIAN INDUSTRIES");
+        stage.setTitle("Restaurante concurrente");
         stage.setScene(scene);
         stage.show();
 

@@ -1,9 +1,9 @@
-package com.example.simulator.models;
+package com.concurrente.restaurant.models;
 
-import com.example.simulator.Restaurante;
-import com.example.simulator.Orden;
-import com.example.simulator.Comida;
-import com.example.simulator.HelloController;
+import com.concurrente.restaurant.Restaurante;
+import com.concurrente.restaurant.Orden;
+import com.concurrente.restaurant.Comida;
+import com.concurrente.restaurant.HelloController;
 
 
 public class Chef implements Runnable {

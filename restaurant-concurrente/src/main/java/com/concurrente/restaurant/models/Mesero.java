@@ -1,8 +1,8 @@
-package com.example.simulator.models;
+package com.concurrente.restaurant.models;
 
-import com.example.simulator.HelloController;
-import com.example.simulator.Restaurante;
-import com.example.simulator.Comida;
+import com.concurrente.restaurant.HelloController;
+import com.concurrente.restaurant.Restaurante;
+import com.concurrente.restaurant.Comida;
 
 public class Mesero implements Runnable {
     public Restaurante restaurante;

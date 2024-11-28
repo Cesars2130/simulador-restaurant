@@ -1,7 +1,7 @@
-package com.example.simulator.models;
+package com.concurrente.restaurant.models;
 
-import com.example.simulator.HelloController;
-import com.example.simulator.Restaurante;
+import com.concurrente.restaurant.HelloController;
+import com.concurrente.restaurant.Restaurante;
 import javafx.application.Platform;
 import java.util.Random;
 

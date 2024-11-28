@@ -1,8 +1,8 @@
-package com.example.simulator.models;
+package com.concurrente.restaurant.models;
 
-import com.example.simulator.HelloController;
-import com.example.simulator.Restaurante;
-import com.example.simulator.Orden;
+import com.concurrente.restaurant.HelloController;
+import com.concurrente.restaurant.Restaurante;
+import com.concurrente.restaurant.Orden;
 
 public class Recepcionista implements Runnable {
     private Restaurante restaurante;
