@@ -11,6 +11,8 @@ import java.util.Map;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
+import com.almasb.fxgl.dsl.FXGL;
+
 public class FXGLController implements Observer {
 
     private final Map<String, Entity> dynamicEntities = new HashMap<>();
@@ -87,32 +89,106 @@ public class FXGLController implements Observer {
     }
 
     // Liberar una mesa cuando un comensal se va
+    // public void liberarMesa(String mesaId) {
+    //     Platform.runLater(() -> {
+    //         if (mesasOcupadas.contains(mesaId)) {
+    //             mesasOcupadas.remove(mesaId);
+    //             mesasLibres.add(mesaId); // Marca la mesa como libre
+
+    //             // Actualiza la vista de la mesa para indicar que está libre
+    //             Entity mesa = dynamicEntities.get(mesaId);
+    //             if (mesa != null) {
+    //                 mesa.getViewComponent().clearChildren();
+    //                 mesa.getViewComponent().addChild(scaledTexture("mesa.png", 100, 50)); // Textura original para mesa libre
+
+    //                 // Encuentra y elimina al comensal asociado
+    //                 Entity comensal = dynamicEntities.values().stream()
+    //                         .filter(e -> e.getViewComponent().getChildren().contains(scaledTexture("comensal_sentado.png", 40, 60)))
+    //                         .findFirst().orElse(null);
+    //                 if (comensal != null) {
+    //                     comensal.removeFromWorld(); // Remueve al comensal del mundo
+    //                     dynamicEntities.remove(comensal);
+    //                 }
+
+    //                 System.out.println(mesaId + " está ahora libre.");
+    //             }
+    //         }
+    //     });
+    // }
+
+
     public void liberarMesa(String mesaId) {
         Platform.runLater(() -> {
             if (mesasOcupadas.contains(mesaId)) {
+                // Eliminar la mesa de ocupadas y agregarla a libres
                 mesasOcupadas.remove(mesaId);
-                mesasLibres.add(mesaId); // Marca la mesa como libre
+                mesasLibres.add(mesaId);
 
-                // Actualiza la vista de la mesa para indicar que está libre
+                // Obtener la entidad de la mesa
                 Entity mesa = dynamicEntities.get(mesaId);
                 if (mesa != null) {
+                    // Restaurar la vista original de la mesa
                     mesa.getViewComponent().clearChildren();
-                    mesa.getViewComponent().addChild(scaledTexture("mesa.png", 100, 50)); // Textura original para mesa libre
-
-                    // Encuentra y elimina al comensal asociado
-                    Entity comensal = dynamicEntities.values().stream()
-                            .filter(e -> e.getViewComponent().getChildren().contains(scaledTexture("comensal_sentado.png", 40, 60)))
-                            .findFirst().orElse(null);
-                    if (comensal != null) {
-                        comensal.removeFromWorld(); // Remueve al comensal del mundo
-                        dynamicEntities.remove(comensal);
-                    }
-
-                    System.out.println(mesaId + " está ahora libre.");
+                    mesa.getViewComponent().addChild(scaledTexture("mesa.png", 100, 50));
                 }
+
+                // Eliminar el comensal asociado a esta mesa
+                String comensalAEliminar = null;
+                for (Map.Entry<String, Entity> entry : dynamicEntities.entrySet()) {
+                    if (entry.getKey().startsWith("comensal_")) {
+                        Entity comensal = entry.getValue();
+                        // Verificar si el comensal está en la posición de la mesa
+                        if (comensal.getX() == mesa.getX() + 20 && comensal.getY() == mesa.getY() - 30) {
+                            comensal.removeFromWorld();
+                            comensalAEliminar = entry.getKey();
+                            break;
+                        }
+                    }
+                }
+
+                // Eliminar el comensal del mapa de entidades dinámicas
+                if (comensalAEliminar != null) {
+                    dynamicEntities.remove(comensalAEliminar);
+                }
+
+                System.out.println("Mesa " + mesaId + " ahora está libre.");
+            } else {
+                System.out.println("La mesa " + mesaId + " no estaba ocupada.");
             }
         });
     }
+
+    // public void liberarMesa(String mesaId) {
+    //     Platform.runLater(() -> {
+    //         if (mesasOcupadas.contains(mesaId)) {
+    //             mesasOcupadas.remove(mesaId);
+    //             mesasLibres.add(mesaId); // Marca la mesa como libre
+    
+    //             // Actualiza la vista de la mesa para indicar que está libre
+    //             Entity mesa = dynamicEntities.get(mesaId);
+    //             if (mesa != null) {
+    //                 mesa.getViewComponent().clearChildren();
+    //                 mesa.getViewComponent().addChild(scaledTexture("mesa.png", 100, 50)); // Textura original para mesa libre
+    //             }
+    
+    //             // Encuentra y elimina al comensal asociado a la mesa
+    //             dynamicEntities.entrySet().removeIf(entry -> {
+    //                 String key = entry.getKey();
+    //                 if (key.startsWith("comensal_")) { // Filtrar solo los comensales
+    //                     Entity comensal = entry.getValue();
+    //                     if (comensal.getX() == mesa.getX() + 20 && comensal.getY() == mesa.getY() - 30) {
+    //                         comensal.removeFromWorld();
+    //                         return true; // Eliminar del mapa
+    //                     }
+    //                 }
+    //                 return false;
+    //             });
+    
+    //             System.out.println("Mesa " + mesaId + " ahora está libre.");
+    //         }
+    //     });
+    // }
+    
 
     @Override
     public void update(String event, Object data) {
@@ -169,33 +245,125 @@ public class FXGLController implements Observer {
         });
     }
 
+    // public void servePlato() {
+    //     Platform.runLater(() -> {
+    //         if (!mesasOcupadas.isEmpty()) {
+    //             // Obtiene la primera mesa ocupada
+    //             String mesaId = mesasOcupadas.get(0); // No la remueve, solo sirve
+    //             Entity mesa = dynamicEntities.get(mesaId);
+
+    //             if (mesa != null) {
+    //                 double mesaX = mesa.getX();
+    //                 double mesaY = mesa.getY();
+
+    //                 // Crea un mesero y lo anima hacia la mesa
+    //                 Entity mesero = entityBuilder()
+    //                         .at(150, 50)
+    //                         .view(scaledTexture("mesero.png", 40, 80)) // Tamaño ajustado del mesero
+    //                         .buildAndAttach();
+
+    //                 mesero.translateX(mesaX - mesero.getX());
+    //                 mesero.translateY(mesaY - mesero.getY());
+    //                 spawnPlato(mesaX, mesaY);
+    //                 mesero.removeFromWorld();
+    //             }
+    //         } else {
+    //             System.out.println("No hay mesas ocupadas para servir.");
+    //         }
+    //     });
+    // }
     public void servePlato() {
         Platform.runLater(() -> {
             if (!mesasOcupadas.isEmpty()) {
-                // Obtiene la primera mesa ocupada
-                String mesaId = mesasOcupadas.get(0); // No la remueve, solo sirve
-                Entity mesa = dynamicEntities.get(mesaId);
-
-                if (mesa != null) {
-                    double mesaX = mesa.getX();
-                    double mesaY = mesa.getY();
-
-                    // Crea un mesero y lo anima hacia la mesa
-                    Entity mesero = entityBuilder()
-                            .at(150, 50)
-                            .view(scaledTexture("mesero.png", 40, 80)) // Tamaño ajustado del mesero
-                            .buildAndAttach();
-
-                    mesero.translateX(mesaX - mesero.getX());
-                    mesero.translateY(mesaY - mesero.getY());
-                    spawnPlato(mesaX, mesaY);
-                    mesero.removeFromWorld();
+                for (String mesaId : mesasOcupadas) {
+                    Entity mesa = dynamicEntities.get(mesaId);
+                    if (mesa != null) {
+                        // More robust check for plate existence
+                        boolean platoExiste = mesa.getViewComponent().getChildren().stream()
+                            .anyMatch(node -> {
+                                if (node instanceof ImageView) {
+                                    ImageView imageView = (ImageView) node;
+                                    return imageView != null 
+                                        && imageView.getImage() != null 
+                                        && imageView.getFitWidth() == 20 
+                                        && imageView.getFitHeight() == 20;
+                                }
+                                return false;
+                            });
+    
+                        if (!platoExiste) {
+                            // Obtiene la posición de la mesa
+                            double mesaX = mesa.getX();
+                            double mesaY = mesa.getY();
+    
+                            // Crea un mesero y lo anima hacia la mesa
+                            Entity mesero = entityBuilder()
+                                    .at(150, 50)
+                                    .view(scaledTexture("mesero.png", 40, 80)) // Tamaño ajustado del mesero
+                                    .buildAndAttach();
+    
+                            FXGL.animationBuilder()
+                                    .duration(javafx.util.Duration.seconds(2))
+                                    .translate(mesero)
+                                    .from(mesero.getPosition())
+                                    .to(mesa.getPosition())
+                                    .buildAndPlay();
+    
+                            // Añade el plato tras la animación
+                            FXGL.runOnce(() -> {
+                                spawnPlato(mesaX, mesaY);
+                                mesero.removeFromWorld();
+                            }, javafx.util.Duration.seconds(2));
+    
+                            return; // Salir tras atender la primera mesa encontrada
+                        }
+                    }
                 }
             } else {
                 System.out.println("No hay mesas ocupadas para servir.");
             }
         });
     }
+    // public void servePlato() {
+    //     Platform.runLater(() -> {
+    //         if (!mesasOcupadas.isEmpty()) {
+    //             for (String mesaId : mesasOcupadas) {
+    //                 Entity mesa = dynamicEntities.get(mesaId);
+    //                 if (mesa != null && mesa.getViewComponent().getChildren().stream()
+    //                         .noneMatch(node -> ((ImageView) node).getImage().getUrl().contains("plato.png"))) {
+    //                     // Obtiene la posición de la mesa
+    //                     double mesaX = mesa.getX();
+    //                     double mesaY = mesa.getY();
+    
+    //                     // Crea un mesero y lo anima hacia la mesa
+    //                     Entity mesero = entityBuilder()
+    //                             .at(150, 50)
+    //                             .view(scaledTexture("mesero.png", 40, 80)) // Tamaño ajustado del mesero
+    //                             .buildAndAttach();
+    
+    //                     FXGL.animationBuilder()
+    //                             .duration(javafx.util.Duration.seconds(2))
+    //                             // .interpolator(FXGL.easeInOut())
+    //                             .translate(mesero)
+    //                             .from(mesero.getPosition())
+    //                             .to(mesa.getPosition())
+    //                             .buildAndPlay();
+    
+    //                     // Añade el plato tras la animación
+    //                     FXGL.runOnce(() -> {
+    //                         spawnPlato(mesaX, mesaY);
+    //                         mesero.removeFromWorld();
+    //                     }, javafx.util.Duration.seconds(2));
+    
+    //                     return; // Salir tras atender la primera mesa encontrada
+    //                 }
+    //             }
+    //         } else {
+    //             System.out.println("No hay mesas ocupadas para servir.");
+    //         }
+    //     });
+    // }
+    
 
     private void spawnPlato(double x, double y) {
         Platform.runLater(() -> {
