@@ -1,7 +1,8 @@
 package com.concurrente.restaurant;
 
-import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import javafx.application.Platform;
+import javafx.scene.image.ImageView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,80 +20,98 @@ public class FXGLController implements Observer {
     public FXGLController(EventBus eventBus) {
         eventBus.subscribe(this);
 
+        // Agrega el fondo al inicio
+        Platform.runLater(this::addBackground);
+
         // Inicializa mesas estáticas con IDs
-        for (int i = 1; i <= 5; i++) { // Ejemplo de 5 mesas
-            String mesaId = "mesa_" + i;
-            Entity mesa = entityBuilder()
-                    .at(200 + (i - 1) * 120, 200) // Posiciones de las mesas
-                    .view(texture("mesa.png"))
+        Platform.runLater(() -> {
+            for (int i = 1; i <= 5; i++) { // Ejemplo de 5 mesas
+                String mesaId = "mesa_" + i;
+                Entity mesa = entityBuilder()
+                        .at(200 + (i - 1) * 120, 200) // Posiciones de las mesas
+                        .view(scaledTexture("mesa.png", 100, 50)) // Mesa con tamaño ajustado
+                        .buildAndAttach();
+                dynamicEntities.put(mesaId, mesa);
+
+                // Todas las mesas están inicialmente libres
+                mesasLibres.add(mesaId);
+            }
+
+            // Inicializa la representación del chef
+            Entity chef = entityBuilder()
+                    .at(100, 50) // Posición inicial del chef
+                    .view(scaledTexture("chef.png", 60, 80)) // Tamaño ajustado del chef
                     .buildAndAttach();
-            dynamicEntities.put(mesaId, mesa);
+            dynamicEntities.put("chef", chef);
+        });
+    }
 
-            // Todas las mesas están inicialmente libres
-            mesasLibres.add(mesaId);
-        }
-
-        // Inicializa la representación del chef
-        Entity chef = entityBuilder()
-                .at(100, 50) // Posición inicial del chef
-                .view(texture("chef.png"))
+    // Agrega un fondo a la escena
+    private void addBackground() {
+        Entity background = entityBuilder()
+                .at(0, 0)
+                .view(scaledTexture("bg.png", getAppWidth(), getAppHeight())) // Fondo ajustado al tamaño de la ventana
                 .buildAndAttach();
-        dynamicEntities.put("chef", chef);
+        dynamicEntities.put("background", background);
     }
 
     // Crear un comensal en la interfaz
     public void addComensal(String id, double x, double y) {
-        Entity comensal = entityBuilder()
-                .at(x, y)
-                .view(texture("comensal_cola.png"))
-                .buildAndAttach();
-        dynamicEntities.put(id, comensal);
+        Platform.runLater(() -> {
+            Entity comensal = entityBuilder()
+                    .at(x, y)
+                    .view(scaledTexture("comensal_cola.png", 40, 60)) // Tamaño ajustado del comensal
+                    .buildAndAttach();
+            dynamicEntities.put(id, comensal);
 
-        // Asignar una mesa libre
-        if (!mesasLibres.isEmpty()) {
-            String mesaId = mesasLibres.remove(0); // Toma la primera mesa libre
-            mesasOcupadas.add(mesaId); // Marca la mesa como ocupada
+            // Asignar una mesa libre
+            if (!mesasLibres.isEmpty()) {
+                String mesaId = mesasLibres.remove(0); // Toma la primera mesa libre
+                mesasOcupadas.add(mesaId); // Marca la mesa como ocupada
 
-            // Actualiza la vista de la mesa para indicar que está ocupada
-            Entity mesa = dynamicEntities.get(mesaId);
-            if (mesa != null) {
-                // Mueve al comensal a la mesa
-                comensal.setX(mesa.getX() + 20); // Ajusta la posición para que se vea sobre la mesa
-                comensal.setY(mesa.getY() - 30); // Ajusta la posición vertical
-                comensal.getViewComponent().clearChildren();
-                comensal.getViewComponent().addChild(texture("comensal_sentado.png")); // Cambia el asset a "sentado"
+                // Actualiza la vista de la mesa para indicar que está ocupada
+                Entity mesa = dynamicEntities.get(mesaId);
+                if (mesa != null) {
+                    // Mueve al comensal a la mesa
+                    comensal.setX(mesa.getX() + 20); // Ajusta la posición para que se vea sobre la mesa
+                    comensal.setY(mesa.getY() - 30); // Ajusta la posición vertical
+                    comensal.getViewComponent().clearChildren();
+                    comensal.getViewComponent().addChild(scaledTexture("comensal_sentado.png", 40, 60)); // Cambia el asset a "sentado"
 
-                System.out.println("Comensal " + id + " asignado a " + mesaId);
+                    System.out.println("Comensal " + id + " asignado a " + mesaId);
+                }
+            } else {
+                System.out.println("No hay mesas disponibles para el comensal " + id);
             }
-        } else {
-            System.out.println("No hay mesas disponibles para el comensal " + id);
-        }
+        });
     }
 
     // Liberar una mesa cuando un comensal se va
     public void liberarMesa(String mesaId) {
-        if (mesasOcupadas.contains(mesaId)) {
-            mesasOcupadas.remove(mesaId);
-            mesasLibres.add(mesaId); // Marca la mesa como libre
+        Platform.runLater(() -> {
+            if (mesasOcupadas.contains(mesaId)) {
+                mesasOcupadas.remove(mesaId);
+                mesasLibres.add(mesaId); // Marca la mesa como libre
 
-            // Actualiza la vista de la mesa para indicar que está libre
-            Entity mesa = dynamicEntities.get(mesaId);
-            if (mesa != null) {
-                mesa.getViewComponent().clearChildren();
-                mesa.getViewComponent().addChild(texture("mesa.png")); // Textura original para mesa libre
+                // Actualiza la vista de la mesa para indicar que está libre
+                Entity mesa = dynamicEntities.get(mesaId);
+                if (mesa != null) {
+                    mesa.getViewComponent().clearChildren();
+                    mesa.getViewComponent().addChild(scaledTexture("mesa.png", 100, 50)); // Textura original para mesa libre
 
-                // Encuentra y elimina al comensal asociado
-                Entity comensal = dynamicEntities.values().stream()
-                        .filter(e -> e.getViewComponent().getChildren().contains(texture("comensal_sentado.png")))
-                        .findFirst().orElse(null);
-                if (comensal != null) {
-                    comensal.removeFromWorld(); // Remueve al comensal del mundo
-                    dynamicEntities.remove(comensal);
+                    // Encuentra y elimina al comensal asociado
+                    Entity comensal = dynamicEntities.values().stream()
+                            .filter(e -> e.getViewComponent().getChildren().contains(scaledTexture("comensal_sentado.png", 40, 60)))
+                            .findFirst().orElse(null);
+                    if (comensal != null) {
+                        comensal.removeFromWorld(); // Remueve al comensal del mundo
+                        dynamicEntities.remove(comensal);
+                    }
+
+                    System.out.println(mesaId + " está ahora libre.");
                 }
-
-                System.out.println(mesaId + " está ahora libre.");
             }
-        }
+        });
     }
 
     @Override
@@ -125,59 +144,73 @@ public class FXGLController implements Observer {
 
     // Cambiar el asset del chef dependiendo del evento
     private void setChefAsset(String assetName) {
-        Entity chef = dynamicEntities.get("chef");
-        if (chef != null) {
-            chef.getViewComponent().clearChildren();
-            chef.getViewComponent().addChild(texture(assetName));
-            System.out.println("Chef ahora usa el asset: " + assetName);
-        }
+        Platform.runLater(() -> {
+            Entity chef = dynamicEntities.get("chef");
+            if (chef != null) {
+                chef.getViewComponent().clearChildren();
+                chef.getViewComponent().addChild(scaledTexture(assetName, 60, 80));
+                System.out.println("Chef ahora usa el asset: " + assetName);
+            }
+        });
     }
 
     // Cambiar estado de un comensal
     public void updateComensalState(String id, String newState) {
-        Entity comensal = dynamicEntities.get(id);
-        if (comensal != null) {
-            comensal.getViewComponent().clearChildren();
-            if (newState.equals("sentado")) {
-                comensal.getViewComponent().addChild(texture("comensal_sentado.png"));
-            } else if (newState.equals("esperando")) {
-                comensal.getViewComponent().addChild(texture("comensal_cola.png"));
+        Platform.runLater(() -> {
+            Entity comensal = dynamicEntities.get(id);
+            if (comensal != null) {
+                comensal.getViewComponent().clearChildren();
+                if (newState.equals("sentado")) {
+                    comensal.getViewComponent().addChild(scaledTexture("comensal_sentado.png", 40, 60));
+                } else if (newState.equals("esperando")) {
+                    comensal.getViewComponent().addChild(scaledTexture("comensal_cola.png", 40, 60));
+                }
             }
-        }
+        });
     }
 
     public void servePlato() {
-        if (!mesasOcupadas.isEmpty()) {
-            // Obtiene la primera mesa ocupada
-            String mesaId = mesasOcupadas.get(0); // No la remueve, solo sirve
-            Entity mesa = dynamicEntities.get(mesaId);
+        Platform.runLater(() -> {
+            if (!mesasOcupadas.isEmpty()) {
+                // Obtiene la primera mesa ocupada
+                String mesaId = mesasOcupadas.get(0); // No la remueve, solo sirve
+                Entity mesa = dynamicEntities.get(mesaId);
 
-            if (mesa != null) {
-                double mesaX = mesa.getX();
-                double mesaY = mesa.getY();
+                if (mesa != null) {
+                    double mesaX = mesa.getX();
+                    double mesaY = mesa.getY();
 
-                // Crea un mesero y lo anima hacia la mesa
-                Entity mesero = entityBuilder()
-                        .at(150, 50)
-                        .view(texture("mesero.png"))
-                        .buildAndAttach();
+                    // Crea un mesero y lo anima hacia la mesa
+                    Entity mesero = entityBuilder()
+                            .at(150, 50)
+                            .view(scaledTexture("mesero.png", 40, 80)) // Tamaño ajustado del mesero
+                            .buildAndAttach();
 
-                FXGL.runOnce(() -> {
                     mesero.translateX(mesaX - mesero.getX());
                     mesero.translateY(mesaY - mesero.getY());
                     spawnPlato(mesaX, mesaY);
                     mesero.removeFromWorld();
-                }, javafx.util.Duration.seconds(2));
+                }
+            } else {
+                System.out.println("No hay mesas ocupadas para servir.");
             }
-        } else {
-            System.out.println("No hay mesas ocupadas para servir.");
-        }
+        });
     }
 
     private void spawnPlato(double x, double y) {
-        entityBuilder()
-                .at(x + 10, y - 10)
-                .view(texture("plato.png"))
-                .buildAndAttach();
+        Platform.runLater(() -> {
+            entityBuilder()
+                    .at(x + 10, y - 10)
+                    .view(scaledTexture("plato.png", 20, 20)) // Tamaño ajustado del plato
+                    .buildAndAttach();
+        });
+    }
+
+    // Método utilitario para escalar texturas
+    private ImageView scaledTexture(String textureName, double width, double height) {
+        ImageView imageView = texture(textureName);
+        imageView.setFitWidth(width);
+        imageView.setFitHeight(height);
+        return imageView;
     }
 }
