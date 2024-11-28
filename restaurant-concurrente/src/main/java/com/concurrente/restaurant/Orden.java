@@ -11,6 +11,3 @@ public class Orden {
         return numero;
     }
 }
-
-
-

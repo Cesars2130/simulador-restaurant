@@ -3,17 +3,16 @@ package com.concurrente.restaurant.models;
 import com.concurrente.restaurant.Restaurante;
 import com.concurrente.restaurant.Orden;
 import com.concurrente.restaurant.Comida;
-import com.concurrente.restaurant.HelloController;
-
+import com.concurrente.restaurant.EventBus;
 
 public class Chef implements Runnable {
-    private Restaurante restaurante;
-    private HelloController controller;
+    private final Restaurante restaurante;
+    private final EventBus eventBus;
     private volatile boolean running = true;
 
-    public Chef(Restaurante restaurante, HelloController controller) {
+    public Chef(Restaurante restaurante, EventBus eventBus) {
         this.restaurante = restaurante;
-        this.controller = controller;
+        this.eventBus = eventBus;
     }
 
     public void cocinar() throws InterruptedException {
@@ -21,6 +20,8 @@ public class Chef implements Runnable {
             while (restaurante.bufferOrdenes.isEmpty()) {
                 restaurante.wait();
             }
+
+            eventBus.notifyObservers("CHEF_COOKING", null);
 
             if (restaurante.bufferComidas.size() == 5) {
                 restaurante.notify(); // Agrega esta línea para notificar al mesero
@@ -32,6 +33,7 @@ public class Chef implements Runnable {
                     Comida comida = new Comida(orden);
                     restaurante.bufferComidas.offer(comida);
                 }
+                eventBus.notifyObservers("CHEF_COOKED", restaurante.bufferComidas.size());
                 System.out.println("Chef ha cocinado la orden. Comida en el buffer: " + restaurante.bufferComidas.size());
             }
         }
@@ -42,12 +44,6 @@ public class Chef implements Runnable {
         while (running) {
             try {
                 cocinar();
-                if (this.controller != null) {
-                    this.controller.updateBufferOrdenesTextArea(restaurante.bufferOrdenes.size() + " TOTAL");
-                    this.controller.updateBufferComidaTextArea(restaurante.bufferComidas.size() + " TOTAL");
-                    this.controller.updateChefStatus("Cocinando");
-                    this.controller.updateChefStatus("Chef ha cocinado la orden. Comida en el buffer: " + restaurante.bufferComidas.size());
-                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 e.printStackTrace();

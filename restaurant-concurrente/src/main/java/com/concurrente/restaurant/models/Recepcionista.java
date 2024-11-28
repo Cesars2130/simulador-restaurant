@@ -1,26 +1,26 @@
 package com.concurrente.restaurant.models;
 
-import com.concurrente.restaurant.HelloController;
 import com.concurrente.restaurant.Restaurante;
 import com.concurrente.restaurant.Orden;
+import com.concurrente.restaurant.EventBus;
 
 public class Recepcionista implements Runnable {
     private Restaurante restaurante;
-    private HelloController controller;
+    private EventBus eventBus;
     private int sum = 0;
 
-    public Recepcionista(Restaurante restaurante, HelloController controller) {
+    public Recepcionista(Restaurante restaurante, EventBus eventBus) {
         this.restaurante = restaurante;
-        this.controller = controller;
+        this.eventBus = eventBus;
     }
-
-    public synchronized void entrarComensal() throws InterruptedException {
+    
+    synchronized void entrarComensal() throws InterruptedException {
         synchronized (restaurante) {
             Orden orden = new Orden(restaurante.comensalesEnRestaurante);
 
             restaurante.bufferOrdenes.offer(orden);
 
-            restaurante.colaEspera.offer(new Comensal(restaurante, controller, this));
+            restaurante.colaEspera.offer(new Comensal(restaurante, this, eventBus, (sum + 1)));
 
             while (restaurante.comensalesEnRestaurante >= Restaurante.CAPACIDAD_MAXIMA ||
                     restaurante.mesasOcupadas >= Restaurante.CAPACIDAD_MAXIMA) {
@@ -31,7 +31,10 @@ public class Recepcionista implements Runnable {
             restaurante.comensalesEnRestaurante++;
             sum = sum + 1;
             restaurante.mesasOcupadas++;
-            controller.updateComensalStatus("COMENSAL " + sum);
+            String id = "comensal_" + sum;
+
+            eventBus.notifyObservers("NEW_COMENSAL", id);
+
             System.out.println("Comensal entra al restaurante. Comensales en el restaurante: " + restaurante.comensalesEnRestaurante +
                     ". Mesas ocupadas: " + restaurante.mesasOcupadas);
 
